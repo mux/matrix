@@ -303,6 +303,16 @@ impl<T, const R: usize, const C: usize> From<[[T; C]; R]> for Matrix<T, R, C> {
     }
 }
 
+impl<T, const N: usize> From<Vector<T, N>> for Matrix<T, 1, N>
+where
+    T: Copy,
+    Vector<T, N>: Copy,
+{
+    fn from(vector: Vector<T, N>) -> Self {
+        Matrix { data: [vector] }
+    }
+}
+
 // Vector methods
 impl<T, const N: usize> Vector<T, N>
 where
@@ -324,16 +334,6 @@ where
             sum += self[i] * rhs[i];
         }
         sum
-    }
-}
-
-impl<T, const N: usize> From<Vector<T, N>> for Matrix<T, 1, N>
-where
-    T: Copy,
-    Vector<T, N>: Copy,
-{
-    fn from(vector: Vector<T, N>) -> Self {
-        Matrix { data: [vector] }
     }
 }
 
