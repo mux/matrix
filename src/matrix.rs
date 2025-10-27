@@ -1,3 +1,4 @@
+use num_traits::{One, Zero, one, zero};
 use std::array;
 use std::ops::{Add, AddAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign};
 
@@ -319,7 +320,7 @@ where
 // Vector methods
 impl<T, const N: usize> Vector<T, N>
 where
-    T: AddAssign + Mul<Output = T> + Copy + Default,
+    T: Copy + Default,
 {
     /// Transposes this row-like vector into a Nx1 column matrix.
     pub fn transpose(self) -> Matrix<T, N, 1> {
@@ -331,7 +332,10 @@ where
         new
     }
     /// Calculates the dot product of two vectors.
-    pub fn dot(self, rhs: Self) -> T {
+    pub fn dot(self, rhs: Self) -> T
+    where
+        T: AddAssign + Mul<Output = T>,
+    {
         let mut sum = T::default();
         for i in 0..N {
             sum += self[i] * rhs[i];
@@ -354,6 +358,46 @@ where
             }
         }
         new
+    }
+}
+
+// Methods for square matrices
+impl<T, const N: usize> Matrix<T, N, N>
+where
+    T: Copy,
+{
+    pub fn identity() -> Matrix<T, N, N>
+    where
+        T: Zero + One,
+    {
+        Matrix {
+            data: array::from_fn(|i| {
+                let mut data = [zero(); N];
+                data[i] = one();
+                Vector::from(data)
+            }),
+        }
+    }
+
+    pub fn transpose_mut(&mut self) {
+        for r in 0..N {
+            for c in (r + 1)..N {
+                let tmp = self[r][c];
+                self[r][c] = self[c][r];
+                self[c][r] = tmp;
+            }
+        }
+    }
+
+    pub fn trace(&self) -> T
+    where
+        T: Default + AddAssign,
+    {
+        let mut sum = T::default();
+        for i in 0..N {
+            sum += self[i][i];
+        }
+        sum
     }
 }
 
