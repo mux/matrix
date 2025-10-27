@@ -15,6 +15,7 @@ pub struct Matrix<T, const R: usize, const C: usize> {
 // Indexing
 impl<T, const N: usize> Index<usize> for Vector<T, N> {
     type Output = T;
+
     fn index(&self, index: usize) -> &Self::Output {
         &self.data[index]
     }
@@ -137,6 +138,7 @@ where
     T: Mul<Output = T> + Copy + Default,
 {
     type Output = Self;
+
     fn mul(self, scalar: T) -> Self::Output {
         Vector {
             data: array::from_fn(|i| self.data[i] * scalar),
@@ -163,6 +165,7 @@ where
     Vector<T, C>: Mul<T, Output = Vector<T, C>> + Default + Copy,
 {
     type Output = Self;
+
     fn mul(self, scalar: T) -> Self::Output {
         Matrix {
             data: array::from_fn(|i| self.data[i] * scalar),
