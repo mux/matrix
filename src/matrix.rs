@@ -123,7 +123,7 @@ where
                 Vector::from(array::from_fn(|k| {
                     let mut sum = zero();
                     for n in 0..N {
-                        sum += self[m][n] + rhs[n][k];
+                        sum += self[m][n] * rhs[n][k];
                     }
                     sum
                 }))
@@ -294,7 +294,7 @@ impl<T: Copy + Zero, const R: usize, const C: usize> Zero for Matrix<T, R, C> {
     }
 
     fn is_zero(&self) -> bool {
-        self.data.iter().all(|x| x.is_zero())
+        self.data.iter().all(|row| row.is_zero())
     }
 }
 
@@ -386,7 +386,7 @@ where
     T: Copy + Default,
 {
     /// Matrix transposition
-    pub fn transpose(self) -> Self {
+    pub fn transpose(self) -> Matrix<T, C, R> {
         let mut new = Matrix::default();
 
         for r in 0..R {
