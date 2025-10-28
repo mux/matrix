@@ -298,6 +298,17 @@ impl<T: Copy + Zero, const R: usize, const C: usize> Zero for Matrix<T, R, C> {
     }
 }
 
+// One
+impl<T, const N: usize> One for Matrix<T, N, N>
+where
+    T: Zero + One + Copy,
+    Self: Mul<Self, Output = Self> + Zero,
+{
+    fn one() -> Self {
+        Self::identity()
+    }
+}
+
 // Defaults
 impl<T: Copy + Default, const N: usize> Default for Vector<T, N> {
     fn default() -> Self {
@@ -375,7 +386,7 @@ where
     T: Copy + Default,
 {
     /// Matrix transposition
-    pub fn transpose(self) -> Matrix<T, C, R> {
+    pub fn transpose(self) -> Self {
         let mut new = Matrix::default();
 
         for r in 0..R {
@@ -393,11 +404,11 @@ where
     T: Copy,
 {
     /// Generate an identity matrix
-    pub fn identity() -> Matrix<T, N, N>
+    pub fn identity() -> Self
     where
         T: Zero + One,
     {
-        Matrix {
+        Self {
             data: array::from_fn(|i| {
                 let mut data = [zero(); N];
                 data[i] = one();
