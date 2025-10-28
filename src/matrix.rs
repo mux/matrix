@@ -113,23 +113,22 @@ where
 impl<T, const M: usize, const N: usize, const K: usize> Mul<Matrix<T, { N }, { K }>>
     for Matrix<T, { M }, { N }>
 where
-    T: AddAssign + Mul<Output = T> + Copy + Default,
+    T: Zero + AddAssign + Mul<Output = T> + Copy,
 {
     type Output = Matrix<T, { M }, { K }>;
 
     fn mul(self, rhs: Matrix<T, { N }, { K }>) -> Self::Output {
-        let mut new_data = [Vector::default(); M];
-
-        for m in 0..M {
-            for k in 0..K {
-                let mut sum = T::default();
-                for n in 0..N {
-                    sum += self[m][n] * rhs[n][k];
-                }
-                new_data[m][k] = sum;
-            }
+        Matrix {
+            data: array::from_fn(|m| {
+                Vector::from(array::from_fn(|k| {
+                    let mut sum = zero();
+                    for n in 0..N {
+                        sum += self[m][n] + rhs[n][k];
+                    }
+                    sum
+                }))
+            }),
         }
-        Matrix { data: new_data }
     }
 }
 
@@ -276,6 +275,29 @@ where
     }
 }
 
+// Zero
+impl<T: Copy + Zero, const N: usize> Zero for Vector<T, N> {
+    fn zero() -> Self {
+        Self { data: [zero(); N] }
+    }
+
+    fn is_zero(&self) -> bool {
+        self.data.iter().all(|x| x.is_zero())
+    }
+}
+
+impl<T: Copy + Zero, const R: usize, const C: usize> Zero for Matrix<T, R, C> {
+    fn zero() -> Self {
+        Self {
+            data: [Vector::zero(); R],
+        }
+    }
+
+    fn is_zero(&self) -> bool {
+        self.data.iter().all(|x| x.is_zero())
+    }
+}
+
 // Defaults
 impl<T: Copy + Default, const N: usize> Default for Vector<T, N> {
     fn default() -> Self {
@@ -320,10 +342,13 @@ where
 // Vector methods
 impl<T, const N: usize> Vector<T, N>
 where
-    T: Copy + Default,
+    T: Copy,
 {
     /// Transposes this row-like vector into a Nx1 column matrix.
-    pub fn transpose(self) -> Matrix<T, N, 1> {
+    pub fn transpose(self) -> Matrix<T, N, 1>
+    where
+        T: Default,
+    {
         let mut new = Matrix::<T, N, 1>::default();
 
         for i in 0..N {
@@ -334,9 +359,9 @@ where
     /// Calculates the dot product of two vectors.
     pub fn dot(self, rhs: Self) -> T
     where
-        T: AddAssign + Mul<Output = T>,
+        T: Zero + AddAssign + Mul<Output = T>,
     {
-        let mut sum = T::default();
+        let mut sum = zero();
         for i in 0..N {
             sum += self[i] * rhs[i];
         }
@@ -349,6 +374,7 @@ impl<T, const R: usize, const C: usize> Matrix<T, R, C>
 where
     T: Copy + Default,
 {
+    /// Matrix transposition
     pub fn transpose(self) -> Matrix<T, C, R> {
         let mut new = Matrix::default();
 
@@ -366,6 +392,7 @@ impl<T, const N: usize> Matrix<T, N, N>
 where
     T: Copy,
 {
+    /// Generate an identity matrix
     pub fn identity() -> Matrix<T, N, N>
     where
         T: Zero + One,
@@ -379,6 +406,7 @@ where
         }
     }
 
+    /// In-place matrix tramsposition
     pub fn transpose_mut(&mut self) {
         for r in 0..N {
             for c in (r + 1)..N {
@@ -391,9 +419,9 @@ where
 
     pub fn trace(&self) -> T
     where
-        T: Default + AddAssign,
+        T: Zero + AddAssign,
     {
-        let mut sum = T::default();
+        let mut sum = zero();
         for i in 0..N {
             sum += self[i][i];
         }
