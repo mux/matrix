@@ -65,7 +65,7 @@ where
 
     fn add(self, rhs: Self) -> Self::Output {
         Vector {
-            data: array::from_fn(|i| self.data[i] + rhs.data[i]),
+            data: array::from_fn(|i| self[i] + rhs[i]),
         }
     }
 }
@@ -77,7 +77,7 @@ where
 {
     fn add_assign(&mut self, rhs: Self) {
         for i in 0..N {
-            self.data[i] += rhs.data[i];
+            self[i] += rhs[i];
         }
     }
 }
@@ -92,7 +92,7 @@ where
     fn add(self, rhs: Self) -> Self::Output {
         Matrix {
             // This works by calling the `Add` implementation for Vector
-            data: array::from_fn(|i| self.data[i] + rhs.data[i]),
+            data: array::from_fn(|i| self[i] + rhs[i]),
         }
     }
 }
@@ -104,7 +104,7 @@ where
 {
     fn add_assign(&mut self, rhs: Self) {
         for i in 0..R {
-            self.data[i] += rhs.data[i]; // Calls Vector's AddAssign
+            self[i] += rhs[i];
         }
     }
 }
@@ -141,7 +141,7 @@ where
 
     fn mul(self, scalar: T) -> Self::Output {
         Vector {
-            data: array::from_fn(|i| self.data[i] * scalar),
+            data: array::from_fn(|i| self[i] * scalar),
         }
     }
 }
@@ -168,7 +168,7 @@ where
 
     fn mul(self, scalar: T) -> Self::Output {
         Matrix {
-            data: array::from_fn(|i| self.data[i] * scalar),
+            data: array::from_fn(|i| self[i] * scalar),
         }
     }
 }
@@ -196,7 +196,7 @@ where
 
     fn neg(self) -> Self::Output {
         Vector {
-            data: array::from_fn(|i| -self.data[i]),
+            data: array::from_fn(|i| -self[i]),
         }
     }
 }
@@ -204,14 +204,13 @@ where
 // Matrix negation (-matrix)
 impl<T, const R: usize, const C: usize> Neg for Matrix<T, R, C>
 where
-    // Vector<T, C> must implement Neg
     Vector<T, C>: Neg<Output = Vector<T, C>> + Copy,
 {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
         Matrix {
-            data: array::from_fn(|i| -self.data[i]), // Calls Vector's Neg
+            data: array::from_fn(|i| -self[i]),
         }
     }
 }
@@ -227,7 +226,7 @@ where
     fn sub(self, rhs: Self) -> Self::Output {
         Vector {
             // Create a new array by subtracting elements at each index
-            data: array::from_fn(|i| self.data[i] - rhs.data[i]),
+            data: array::from_fn(|i| self[i] - rhs[i]),
         }
     }
 }
@@ -240,7 +239,7 @@ where
 {
     fn sub_assign(&mut self, rhs: Self) {
         for i in 0..N {
-            self.data[i] -= rhs.data[i];
+            self[i] -= rhs[i];
         }
     }
 }
@@ -257,7 +256,7 @@ where
         Matrix {
             // Create a new array of row vectors
             // This works by calling the `Sub` implementation for Vector
-            data: array::from_fn(|i| self.data[i] - rhs.data[i]),
+            data: array::from_fn(|i| self[i] - rhs[i]),
         }
     }
 }
@@ -270,7 +269,7 @@ where
 {
     fn sub_assign(&mut self, rhs: Self) {
         for i in 0..R {
-            self.data[i] -= rhs.data[i]; // Calls Vector's SubAssign
+            self[i] -= rhs[i];
         }
     }
 }
@@ -301,11 +300,17 @@ impl<T: Copy + Zero, const R: usize, const C: usize> Zero for Matrix<T, R, C> {
 // One
 impl<T, const N: usize> One for Matrix<T, N, N>
 where
-    T: Zero + One + Copy,
+    T: Zero + One + Copy + PartialEq,
     Self: Mul<Self, Output = Self> + Zero,
 {
     fn one() -> Self {
         Self::identity()
+    }
+
+    fn is_one(&self) -> bool {
+        self.data
+            .iter()
+            .all(|row| row.as_ref().iter().all(|x| x.is_one()))
     }
 }
 
